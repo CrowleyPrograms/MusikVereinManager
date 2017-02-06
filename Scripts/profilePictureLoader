@@ -1,0 +1,22 @@
+<?php
+include 'dbaccess.php';
+session_start();
+if(!ISSET($_SESSION['userid']))
+{
+    header('Location: login.php');
+}
+$userid = $_SESSION['userid'];
+$rows = executeQuery("SELECT * FROM users WHERE id= ".$userid);
+$user = $rows[0];
+if($user !== false)
+{
+    $pathtopropic = 'path/to/profile/pictures/';
+    $picname = $userid . $user['username'] . '.png';
+    header("Content-type: image/png");
+    readfile($pathtopropic . $picname);
+}
+else
+{
+    echo 'unkown';
+}
+?>
