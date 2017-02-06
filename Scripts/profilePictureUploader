@@ -1,0 +1,68 @@
+<?php
+include 'dbaccess.php';
+session_start();
+$_SESSION['userid'] = 1;
+//Connect to databse
+if(!ISSET($_SESSION['userid']))
+{
+    header('Location: login.php');
+}
+$userid = $_SESSION['userid'];
+$rows = executeQuery("SELECT * FROM users WHERE id= ".$userid);
+$user = $rows[0];
+$target_dir = 'path/to/profile/pictures/';
+if($user !== false)
+{
+    $picname = $userid . $user['username'] . '.png';
+}
+else
+{
+    die("Please log in first");
+}
+$target_file = $target_dir . $picname;
+$uploadOk = 1;
+//The extension of the uploaded file.
+$imageFileType = pathinfo($target_dir . basename($_FILES["fileToUpload"]["name"]),PATHINFO_EXTENSION);
+// Check if image file is a actual image or fake image
+if(isset($_POST["submit"])) {
+    $check = getimagesize($_FILES["fileToUpload"]["tmp_name"]);
+    if($check !== false) {
+        $uploadOk = 1;
+    } else {
+        echo "File is not an image.";
+        $uploadOk = 0;
+    }
+}
+// Allow certain file formats
+$tmpfileextention = strtolower($imageFileType);
+if( $tmpfileextention != "png" && $tmpfileextention != "jpg" && $tmpfileextention != "jpeg") {
+    echo "Sorry, only PNG files are allowed.";
+    $uploadOk = 0;
+}
+//Check if exeeds max size (currently 5MB)
+if ($_FILES["fileToUpload"]["size"] > 5000000) {
+    echo "Sorry, your file is too large.";
+    $uploadOk = 0;
+}
+// Check if $uploadOk is set to 0 by an error
+if ($uploadOk == 0) {
+    echo "Sorry, your file was not uploaded.";
+// if everything is ok, try to upload file
+} else {
+    if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
+        echo "The file ". basename( $_FILES["fileToUpload"]["name"]). " has been uploaded.";
+    } else {
+        echo "Sorry, there was an error uploading your file.";
+    }
+}
+//Convert to png, if jpg or jpeg
+if($tmpfileextention == "jpg" || $tmpfileextention == "jpeg")
+{
+    //Create png with temporary name
+    imagepng(imagecreatefromstring(file_get_contents($target_file)), $target_dir . 'tmp.png');
+    //Delete old file
+    unlink($target_file);
+    //Rename to proper name
+    rename($target_dir . 'tmp.png',$target_file);
+}
+?>
